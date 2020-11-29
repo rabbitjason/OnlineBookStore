@@ -1,0 +1,133 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Book Store</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script>
+  $(document).ready(function () {
+	  
+	  	$("#id_user_login").css("color", "#f7a849");
+	  	var useraccount = $.cookie('USERACCOUNT');
+		if (useraccount != null) {
+		  $("#id_useraccount").text(useraccount);
+		
+		  $("#id_logout").hover(function () {
+		    $("#id_logout").css("color", "#f7a849");
+		  }, function () {
+		    $("#id_logout").css("color", "white");
+		  });
+		  
+		  $(".user_login_register_box").hide();
+		} else {
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		}
+		
+		$("#id_logout").click(function(){
+		  // $.cookie('USERACCOUNT', null);
+		  $.removeCookie('USERACCOUNT');
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		});
+		
+
+    $(":button").click(function () {
+      $.ajax({
+        type: 'post',
+        url: 'LoginServlet',
+        data: $("#loginform").serialize(),
+        cache: false,
+        dataType: 'json',
+        success: function (data, status) {
+          var obj = data;
+          if (obj.status == "0") {
+        	console.log("Login Successful!" + "\n" + "id: " + obj.id);
+            location.href = "index.html";
+          } else {
+        	console.log("Login fail!" + "\n" + "Email or Password is not corrected!");
+            $("#id_email").css("border", "1px solid red");
+            $("#id_password").css("border", "1px solid red");
+          }
+
+        },
+        error: function (e) {
+        	console.log("Connect fail!");
+        }
+      });
+    });
+
+  });
+</script>
+
+<body>
+  <div id="wrap">
+    <div class="header">
+      <div class="logo">
+        <a href="index.html"><img src="images/logo.gif" alt="" title="" border="0" /></a>
+      </div>
+      <div id="menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="books.html">Books</a></li>
+          <li><a href="cart.html">Shopping Cart</a></li>
+          <li><a href="order.html">My Order</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      
+      <div class="user_status_box">
+        <a id="id_useraccount"></a><a>&nbsp;&nbsp;-&nbsp;&nbsp;</a>
+        <a id="id_logout" href="#">Logout</a>
+      </div>
+      
+      <div class="user_login_register_box">
+        <a id="id_user_login" href="login.html">Login</a><a>&nbsp;/</a>
+        <a id="id_user_register" href="register.html">Register</a>
+      </div>
+      
+    </div>
+
+    <div class="center_content">
+      <div class="center_layout">
+        <div class="title"><span class="title_icon"><img src="images/bullet1.gif" alt="" title="" /></span>Login
+        </div>
+        <div class="feat_prod_box_details">
+          <div class="contact_form">
+            <div class="form_subtitle">Login into your account</div>
+            <form id="loginform" action="#">
+
+              <div class="form_row">
+                <label class="contact"><strong>Email:</strong></label>
+                <input id="id_email" type="email" class="contact_input" name="email" />
+              </div>
+              <div class="form_row">
+                <label class="contact"><strong>Password:</strong></label>
+                <input type="password" class="contact_input" name="password" id="id_password"/>
+              </div>
+
+              <div class="form_row">
+                <div class="terms">
+                  <input type="checkbox" name="terms" />
+                  Remember me
+                </div>
+              </div>
+              <div class="form_row">
+                <input type="button" class="register" value="Login" />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="clear"></div>
+    </div>
+  </div>
+</body>
+
+</html>

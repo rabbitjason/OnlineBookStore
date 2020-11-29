@@ -1,0 +1,439 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Book Store</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <!-- Styles -->
+  <link rel="stylesheet" type="text/css" href="css/jquery-comments.css">
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+  <!-- Data -->
+  <script type="text/javascript" src="data/comments-data.js"></script>
+  
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.8.0/jquery.textcomplete.js"></script>
+<script type="text/javascript" src="js/jquery-comments.js"></script>
+
+<!-- Init jquery-comments -->
+<script type="text/javascript">
+	
+</script>
+<script type="text/javascript">
+
+  $(document).ready(function () {
+	    console.log("ready: document");
+	  	var useraccount = $.cookie('USERACCOUNT');
+		if (useraccount != null) {
+		  $("#id_useraccount").text(useraccount);
+		
+		  $("#id_logout").hover(function () {
+		    $("#id_logout").css("color", "#f7a849");
+		  }, function () {
+		    $("#id_logout").css("color", "white");
+		  });
+		  
+		  $(".user_login_register_box").hide();
+		  $(".more").show();
+		  $( "li" ).last().show();
+		} else {
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		  $(".more").hide();
+		  $( "li" ).last().hide();
+		}
+		
+		$("#id_logout").click(function(){
+		  $.removeCookie('USERACCOUNT');
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		  $(".more").hide();
+		  $( "li" ).last().hide();
+		});
+
+    var bookid = getParams("bookid");
+    var book_fee = 0;
+    $.ajax({
+      type: 'post',
+      url: 'BookInfoServlet',
+      data: { bookid: getParams("bookid") },
+      cache: false,
+      dataType: 'json',
+      success: function (data, status) {
+        var obj = data;
+        if (obj.status == "0") {
+          //alert("Login Successful!" + "\n" + "price: " + obj.price);
+          $("#id_title").text(obj.title);
+          $("#id_price").text("NZD " + obj.price);
+          book_fee = obj.price;
+          var imgname = "images/prod" + bookid + ".gif";
+          $("#id_img").attr('src', imgname);
+          
+          console.log("comments: " + obj.comments.length);
+          showComments(obj.comments);
+          
+        } else {
+          //alert("Login fail!" + "\n" + "Email or Password is not corrected!");
+          $("#id_title").text("Book Name");
+          $("id_price").text("NZD 0.00");
+        }
+
+      },
+      error: function (e) {
+        alert("Connect fail!");
+      }
+    });
+
+    var user_id = $.cookie('USERID');
+    $(".more").click(function () {
+    	var book_num = $("#id_numbers").val();
+      $.ajax({
+        type: 'post',
+        url: 'AddToCartServlet',
+        data: { bookid: bookid, userid: user_id, bookfee: book_fee, booknum: book_num},
+        cache: false,
+        dataType: 'json',
+        success: function (data, status) {
+          var obj = data;
+          if (obj.status == "0") {
+            //alert("bookid: " + obj.bookid + '\n' + "userid: " + obj.userid);
+            //alert("Add item(s) to the Shopping Cart successful! ");
+            location.href = "cart.html";
+          } else {
+            alert("Add item(s) to the Shopping Cart fail!");                                                                                                                                                           
+          }
+        },
+        error: function (e) {
+          alert("Connect fail!");
+        }
+      });
+    });
+    
+    var userfirstname = $.cookie('USERFIRSTNAME');
+    
+    function showComments(comms) {
+		var saveComment = function(data) {
+
+			// Convert pings to human readable format
+			$(Object.keys(data.pings)).each(function(index, userId) {
+			    var fullname = data.pings[userId];
+			    var pingText = '@' + fullname;
+			    data.content = data.content.replace(new RegExp('@' + userId, 'g'), pingText);
+			});
+
+			$.ajax({
+		        type: 'post',
+		        url: 'AddCommentServlet',
+		        data: { bookid: bookid, userid: user_id, content: data.content, firstname: userfirstname, upvote_count:"0"},
+		        cache: false,
+		        dataType: 'json',
+		        success: function (data, status) {
+		          var obj = data;
+		          if (obj.status == "0") {
+		            alert("Add Comment successful! ");
+		          } else {
+		            alert("Add Comment fail!");                                                                                                                                                           
+		          }
+		        },
+		        error: function (e) {
+		          alert("Connect fail!");
+		        }
+		    });
+			
+			
+			return data;
+		}
+		
+		$('#comments-container').comments({
+			profilePictureURL: 'https://viima-app.s3.amazonaws.com/media/public/defaults/user-icon.png',
+			currentUserId: user_id,
+			roundProfilePictures: false,
+			textareaRows: 1,
+			enableAttachments: false,
+			enableHashtags: false,
+			enablePinging: false,
+			enableReplying: false,
+			enableEditing: false,
+			enableNavigation: false,
+			defaultNavigationSortKey: 'oldest',
+			scrollContainer: $(window),
+			getComments: function(success, error) {
+				setTimeout(function() {
+					console.log("getComments: " + commentsArray.length);
+					success(comms);
+				}, 500);
+			},
+			postComment: function(data, success, error) {
+				setTimeout(function() {
+					console.log("postComment: " + data.content);
+					success(saveComment(data));
+				}, 500);
+			},
+			putComment: function(data, success, error) {
+				setTimeout(function() {
+					console.log("putComment: " + data.content);
+					success(saveComment(data));
+				}, 500);
+			},
+			deleteComment: function(data, success, error) {
+				setTimeout(function() {
+					success();
+				}, 500);
+			},
+			upvoteComment: function(data, success, error) {
+				setTimeout(function() {
+					console.log("upvoteComment: " + data.upvote_count);
+					$.ajax({
+				        type: 'post',
+				        url: 'UpdateCommentServlet',
+				        data: { comment_id: data.id, upvote_count: data.upvote_count},
+				        cache: false,
+				        dataType: 'json',
+				        success: function (data, status) {
+				          var obj = data;
+				          if (obj.status == "0") {
+				        	  console.log("Update Comment successful! ");
+				          } else {
+				        	  console.log("Update Comment fail!");                                                                                                                                                           
+				          }
+				        },
+				        error: function (e) {
+				        	console.log("Connect fail!");
+				        }
+				    });
+					success(data);
+				}, 500);
+			},
+			validateAttachments: function(attachments, callback) {
+				setTimeout(function() {
+					callback(attachments);
+				}, 500);
+			},
+		});
+	};
+
+  });
+
+  function getParams(key) {
+    var reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) {
+      return unescape(r[2]);
+    }
+    return null;
+  };
+
+
+</script>
+
+<body>
+  <div id="wrap">
+    <div class="header">
+      <div class="logo">
+        <a href="index.html"><img src="images/logo.gif" alt="" title="" border="0" /></a>
+      </div>
+      <div id="menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="books.html">Books</a></li>
+          <li><a href="cart.html">Shopping Cart</a></li>
+          <li><a href="order.html">My Order</a></li>
+          <li><a href="search.html">Search</a></li>
+        </ul>
+      </div>
+
+      <div class="user_status_box">
+        <a id="id_useraccount"></a><a>&nbsp;&nbsp;-&nbsp;&nbsp;</a>
+        <a id="id_logout" href="#">Logout</a>
+      </div>
+      
+      <div class="user_login_register_box">
+        <a id="id_user_login" href="login.html">Login</a><a>&nbsp;/</a>
+        <a id="id_user_register" href="register.html">Register</a>
+      </div>
+      
+    </div>
+
+    <div class="center_content">
+      <div class="center_layout">
+      	<div class="crumb_nav"> <a href="index.html">Home</a> &gt;&gt; Book Details </div>
+        <div class="left_content">
+          <div id="id_title" class="title"><span class="title_icon"><img src="images/bullet1.gif" alt=""
+                title="" /></span>Book name</div>
+          <div class="feat_prod_box_details_ver2">
+            <div class="prod_img"><a href="#"><img id="id_img" src="images/prod1.gif" alt="" title="" border="0" /></a>
+              <br />
+              <br />
+              <!--<a href="images/big_pic.jpg" rel="lightbox"><img src="images/zoom.gif" alt="" title="" border="0" /></a>-->
+            </div>
+            <div class="prod_det_box">
+              <div class="box_top"></div>
+              <div class="box_center">
+                <div class="prod_title">Details</div>
+                <p class="details">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+                  incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.<br />
+                  Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore
+                  et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation. </p>
+                <div class="price"><strong>PRICE:</strong> <span id="id_price" class="red">100 $</span></div>
+                
+                <!-- <div class="price">
+                	<strong>COLORS:</strong> <span class="colors"><img src="images/color1.gif" alt=""
+                      title="" border="0" /></span> <span class="colors"><img src="images/color2.gif" alt="" title=""
+                      border="0" /></span> <span class="colors"><img src="images/color3.gif" alt="" title=""
+                      border="0" /></span> 
+                </div>  -->
+                
+                <div class="price">
+                	<strong>NUMBERS:</strong>
+                	<select id="id_numbers">
+                		<option value="1">1</option>
+                		<option value="2">2</option>
+                		<option value="3">3</option>
+                		<option value="4">4</option>
+                		<option value="5">5</option>
+                	</select>
+                </div>
+                
+                <a href="#" class="more"><img src="images/order_now.gif" alt="" title="" border="0" /></a>
+                <div class="clear"></div>
+              </div>
+              <div class="box_bottom"></div>
+            </div>
+            <div class="clear"></div>
+          </div>
+          <div id="demo" class="demolayout">
+            <ul id="demo-nav" class="demolayout">
+              <li><a class="active" href="#tab1">More details</a></li>
+              <li><a class="" href="#tab2">Related books</a></li>
+              <li><a class="" href="#tab3">Book Comment</a></li>
+            </ul>
+            <div class="tabs-container">
+              <div style="display: block;" class="tab" id="tab1">
+                <p class="more_details">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+                  incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation. </p>
+
+                <p class="more_details">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+                  incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation. </p>
+              </div>
+              <div style="display: none;" class="tab" id="tab2">
+                <div class="new_prod_box"> <a href="details.htm">book name</a>
+                  <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb1.gif" alt="" title=""
+                        class="thumb" border="0" /></a> </div>
+                </div>
+                <div class="new_prod_box"> <a href="details.htm">book name</a>
+                  <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb2.gif" alt="" title=""
+                        class="thumb" border="0" /></a> </div>
+                </div>
+                <div class="new_prod_box"> <a href="details.htm">book name</a>
+                  <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb3.gif" alt="" title=""
+                        class="thumb" border="0" /></a> </div>
+                </div>
+                <div class="new_prod_box"> <a href="details.htm">book name</a>
+                  <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb1.gif" alt="" title=""
+                        class="thumb" border="0" /></a> </div>
+                </div>
+                <div class="new_prod_box"> <a href="details.htm">book name</a>
+                  <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb2.gif" alt="" title=""
+                        class="thumb" border="0" /></a> </div>
+                </div>
+                <div class="new_prod_box"> <a href="details.htm">book name</a>
+                  <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb3.gif" alt="" title=""
+                        class="thumb" border="0" /></a> </div>
+                </div>
+                <div class="clear"></div>
+              </div>
+              <div style="display: none;" class="tab" id="tab3">
+              	<br/>
+              	<div id="comments-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="clear"></div>
+        </div>
+      </div>
+      <div class="clear"></div>
+    </div>
+  </div>
+</body>
+
+<script type="text/javascript">
+
+	function Yetii() {
+	
+		this.defaults = {
+			
+			id: null,
+			active: 1,
+			timeout: null,
+			interval: null,
+			tabclass: 'tab',
+			activeclass: 'active'
+		
+		};
+		
+		for (var n in arguments[0]) { this.defaults[n]=arguments[0][n]; };	
+		
+		this.getTabs = function() {
+	        
+			
+	        var retnode = [];
+	        var elem = document.getElementById(this.defaults.id).getElementsByTagName('*');
+			
+			var regexp = new RegExp("(^|\\s)" + this.defaults.tabclass.replace(/\-/g, "\\-") + "(\\s|$)");
+		
+	        for (var i = 0; i < elem.length; i++) {
+	        if (regexp.test(elem[i].className)) retnode.push(elem[i]);
+	        }
+	    
+	        return retnode;
+	    
+	    };
+		
+		this.links = document.getElementById(this.defaults.id + '-nav').getElementsByTagName('a');
+		
+		this.show = function(number){
+	        
+	        for (var i = 0; i < this.tabs.length; i++) {
+	        this.tabs[i].style.display = ((i+1)==number) ? 'block' : 'none';
+	        this.links[i].className = ((i+1)==number) ? this.defaults.activeclass : '';
+	        }
+	    
+	    };
+		
+		 this.rotate = function(interval){
+	    
+	        this.show(this.defaults.active);
+	        this.defaults.active++;
+	    
+	        if(this.defaults.active > this.tabs.length) this.defaults.active = 1;
+	    
+	        var self = this;
+	        this.defaults.timeout = setTimeout(function(){self.rotate(interval);}, interval*1000);
+	    
+	    };
+		
+		this.tabs = this.getTabs();
+		this.show(this.defaults.active);
+		
+		var self = this;
+		for (var i = 0; i < this.links.length; i++) {
+		this.links[i].customindex = i+1;
+		this.links[i].onclick = function(){ if (self.defaults.timeout) clearTimeout(self.defaults.timeout); self.show(this.customindex); return false; };
+	    }
+		
+		if (this.defaults.interval) this.rotate(this.defaults.interval);
+		
+	};
+
+	var tabber1 = new Yetii({
+	  id: 'demo'
+	});
+
+</script>
+
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Book Store</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script>
+
+  function loadImage() {
+    //var image = document.getElementById("image");
+    var content_node = document.getElementsByClassName("center_content");
+
+    var image_text = document.getElementById("image-text");
+    //image_text.textContent = "the second image";
+
+    var url = "http://localhost:8080/RegistServlet";
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", function () {
+      if (this.status == 200) {
+        // loading succeeded
+        //alert(this.responseText);
+        image.src = "images/" + this.responseText;
+        image_text.textContent = this.responseText;
+      } else {
+        console.error("error fetching " + url);
+        console.error("status code: " + this.status + " " + this.statusText);
+      }
+    });
+    xhr.open("GET", url);
+    xhr.send();
+  }
+
+  $(document).ready(function () {
+	  
+	  $("#id_user_register").css("color", "#f7a849");
+	  	var useraccount = $.cookie('USERACCOUNT');
+		if (useraccount != null) {
+		  $("#id_useraccount").text(useraccount);
+		
+		  $("#id_logout").hover(function () {
+		    $("#id_logout").css("color", "#f7a849");
+		  }, function () {
+		    $("#id_logout").css("color", "white");
+		  });
+		  
+		  $(".user_login_register_box").hide();
+		} else {
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		}
+		
+		$("#id_logout").click(function(){
+		  // $.cookie('USERACCOUNT', null);
+		  $.removeCookie('USERACCOUNT');
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		});
+	    
+
+    function jump(count) {
+      window.setTimeout(function () {
+        count--;
+        if (count > 0) {
+          $("#time").html(count);
+          jump(count);
+        } else {
+          location.href = "login.html";
+        }
+      }, 1000);
+    }
+
+    $(":button").click(function () {
+      $.ajax({
+        type: 'post',
+        url: 'RegistServlet',
+        data: $("#registerform").serialize(),
+        cache: false,
+        dataType: 'json',
+        success: function (data, status) {
+          var obj = data;
+          if (obj.status == "0") {
+            $(".center_layout").hide();
+            $("#regiterinfo").fadeIn(2500);
+            jump(10);
+          } else {
+            alert("Register fail!"+"\n"+" The Email is registered by another user!");
+            $("#id_email").css("border", "1px solid red");
+          }
+
+        },
+        error: function (e) {
+          alert("Connect fail!");
+        }
+      });
+    });
+
+  });
+
+</script>
+
+<body>
+  <div id="wrap">
+    <div class="header">
+      <div class="logo">
+        <a href="index.html"><img src="images/logo.gif" alt="" title="" border="0" /></a>
+      </div>
+      <div id="menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="books.html">Books</a></li>
+          <li><a href="cart.html">Shopping Cart</a></li>
+          <li><a href="order.html">My Order</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      
+      <div class="user_status_box">
+        <a id="id_useraccount"></a><a>&nbsp;&nbsp;-&nbsp;&nbsp;</a>
+        <a id="id_logout" href="#">Logout</a>
+      </div>
+      
+      <div class="user_login_register_box">
+        <a id="id_user_login" href="login.html">Login</a><a>&nbsp;/</a>
+        <a id="id_user_register" href="register.html">Register</a>
+      </div>
+      
+    </div>
+
+    <div class="center_content">
+      <div class="center_layout">
+        <div class="title"><span class="title_icon"><img src="images/bullet1.gif" alt="" title="" /></span>Register
+        </div>
+        <div class="feat_prod_box_details">
+          <div class="contact_form">
+            <div class="form_subtitle">Create new account</div>
+            <form id="registerform" action="#">
+              <div class="form_row">
+                <label class="contact"><strong>First Name:</strong></label>
+                <input type="text" class="contact_input" name="firstname" />
+              </div>
+              <div class="form_row">
+                <label class="contact"><strong>Last Name:</strong></label>
+                <input type="text" class="contact_input" name="lastname" />
+              </div>
+              <div class="form_row">
+                <label class="contact"><strong>Password:</strong></label>
+                <input type="password" class="contact_input" name="password1" />
+              </div>
+              <div class="form_row">
+                <label class="contact"><strong>Confirm Password:</strong></label>
+                <input type="password" class="contact_input" name="password2" />
+              </div>
+              <div class="form_row">
+                <label class="contact"><strong>Email:</strong></label>
+                <input id="id_email" type="email" class="contact_input" name="email" />
+              </div>
+              <div class="form_row">
+                <label class="contact"><strong>Phone:</strong></label>
+                <input type="text" class="contact_input" name="phone" />
+              </div>
+              <div class="form_row">
+                <label class="contact"><strong>Address:</strong></label>
+                <input type="text" class="contact_input" name="address" />
+              </div>
+              <div class="form_row">
+                <div class="terms">
+                  <input type="checkbox" name="terms" />
+                  I agree to the <a href="#">terms &amp; conditions</a> </div>
+              </div>
+              <div class="form_row">
+                <input type="button" class="register" value="Register" />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="tip_box" id="regiterinfo" hidden>
+        <br />
+        <h3>Congratulation! You register successful!</h3>
+        <br />
+        <h3>After <strong id="time">10</strong> Seconds, jump into HomePage! </h3>
+
+      </div>
+      <div class="clear"></div>
+    </div>
+  </div>
+</body>
+
+</html>

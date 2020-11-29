@@ -1,0 +1,267 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Book Store</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+<script type="text/javascript">
+
+  function loadBooks(obj) {
+    var id = obj.getAttribute("id");
+    var parent = obj.parentNode;
+    var grandparent = parent.parentNode;
+    var cla = grandparent.getAttribute("class");
+    console.log("dd:", cla);
+    var children = grandparent.children;
+    console.log("length: ", children.length);
+    for (var i = 0; i < children.length; i++) {
+      var val = children[i];
+      val.removeAttribute("class");
+    }
+    var li_class = document.createAttribute("class");
+    li_class.value = "selected";
+    parent.setAttributeNode(li_class);
+  }
+
+  $(document).ready(function () {
+
+	  var useraccount = $.cookie('USERACCOUNT');
+
+		if (useraccount != null) {
+		  $("#id_useraccount").text(useraccount);
+		
+		  $("#id_logout").hover(function () {
+		    $("#id_logout").css("color", "#f7a849");
+		  }, function () {
+		    $("#id_logout").css("color", "white");
+		  });
+		  
+		  $(".user_login_register_box").hide();
+		} else {
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		}
+		
+		$("#id_logout").click(function(){
+		  // $.cookie('USERACCOUNT', null);
+		  $.removeCookie('USERACCOUNT');
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		});
+
+    var user_id = $.cookie('USERID');
+
+    if (useraccount != null) {
+	    $.ajax({
+	      type: 'post',
+	      url: 'ShowCartServlet',
+	      data: { userid: user_id },
+	      cache: false,
+	      dataType: 'json',
+	      success: function (data, status) {
+	        var obj = data;
+	        if (obj.status == "0") {
+	          //console.log("Show cart Successful!" + obj.records.length);
+	          ShowCart(obj.records);
+	          $("#cart_box_details").show();
+	        } else {
+	          //console.log("Get data fail!" + obj.userid);
+	        }
+	
+	      },
+	      error: function (e) {
+	        console.log("Connect fail!");
+	      }
+	    });
+    };
+    
+    $(document).on('click', "a[name='delbook']", function () {
+    	var id = $(this).attr("id");
+    	//console.log("delete book id: " + id)
+    	//return;
+    	$.ajax({
+      	  type: 'post',
+    	      url: 'DelFromCartServlet',
+    	      data: { userid: user_id, bookid:id },
+    	      cache: false,
+    	      dataType: 'json',
+    	      success: function (data, status) {
+    	        var obj = data;
+    	        if (obj.status == "0") {
+    	          console.log("Delete data successful!");
+    	          window.location.reload();
+    	        } else {
+    	          console.log("Delete data fail!" + obj.userid);
+    	        }
+    	      },
+    	      error: function (e) {
+    	        console.log("Connect fail!");
+    	      }
+      	});
+    });
+
+    
+    $("#id_submit").click(function () {
+
+    	$.ajax({
+    	  type: 'post',
+  	      url: 'SubmitOrderServlet',
+  	      data: { userid: user_id },
+  	      cache: false,
+  	      dataType: 'json',
+  	      success: function (data, status) {
+  	        var obj = data;
+  	        if (obj.status == "0") {
+  	          	//console.log("Submit data successful!" + obj.userid);
+				$(".center_layout").hide();
+				$("#submitInfo").fadeIn(2500);
+				jump(5);
+  	        } else {
+  	        	console.log("Submit data fail!" + obj.userid);
+  	        }
+  	      },
+  	      error: function (e) {
+  	        console.log("Connect fail!");
+  	      }
+    	});
+    });
+    
+    
+    function jump(count) {
+        window.setTimeout(function () {
+          count--;
+          if (count > 0) {
+            $("#time").html(count);
+            jump(count);
+          } else {
+            location.href = "order.html";
+          }
+        }, 1000);
+      }
+    
+    
+
+  });
+  
+
+
+  function ShowCart(objs) {
+    var total = 0;
+    for (var i = 0; i < objs.length; i++) {
+      total += objs[i].fee;
+      var htmlText = '<div class="cart_row"><div class="cart_selectbox"><input type="checkbox" name="terms" />';
+      
+      htmlText += '<a href="details.html?bookid=' + objs[i].bookid + '">';
+      
+      htmlText += '<img src="images/thumb' + objs[i].bookid + '.gif" alt="" title="" class="thumb" border="0" /></a>';
+
+      htmlText += '<p class="cart_bookname">'+ objs[i].title +'</p></div>';
+      
+      htmlText += '<div class="cart_qty">' + objs[i].quantity + '</div>';
+      
+      htmlText += '<div class="cart_price">' + objs[i].fee + '</div>';
+      
+      htmlText += '<div class="cart_delete"> <a name="delbook" href="javascript:;" id="' + objs[i].bookid + '">Delete</a> </div>';
+      
+      htmlText += '</div>';
+      $(".cart_form").append(htmlText);
+    }
+    $("#id_subtotal").text("Subtotal (" + objs.length +" items): NZD " + total);
+  }
+
+</script>
+
+<body>
+  <div id="wrap">
+    <div class="header">
+      <div class="logo">
+        <a href="index.html"><img src="images/logo.gif" alt="" title="" border="0" /></a>
+      </div>
+      <div id="menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="books.html">Books</a></li>
+          <li class="selected"><a href="cart.html">Shopping Cart</a></li>
+          <li><a href="order.html">My Order</a></li>
+          <li><a href="search.html">Search</a></li>
+        </ul>
+      </div>
+
+      <div class="user_status_box">
+        <a id="id_useraccount"></a><a>&nbsp;&nbsp;-&nbsp;&nbsp;</a>
+        <a id="id_logout" href="#">Logout</a>
+      </div>
+
+	  <div class="user_login_register_box">
+        <a id="id_user_login" href="login.html">Login</a><a>&nbsp;/</a>
+        <a id="id_user_register" href="register.html">Register</a>
+      </div>
+      
+    </div>
+
+    <div class="center_content">
+      <div class="center_layout">
+        <div class="title"><span class="title_icon"><img src="images/cart.gif" alt="" title="" /></span>Shopping Cart
+        </div>
+        <div id="cart_box_details" hidden>
+          <div class="cart_selectbox">
+            <input type="checkbox" name="terms" />
+            Select all items
+          </div>
+          <div class="cart_qty">
+            Qty
+          </div>
+          <div class="cart_price">
+            Subtotal
+          </div>
+          <div class="cart_form">
+          
+            <!--<div class="cart_row">
+              <div class="cart_selectbox">
+                <input type="checkbox" name="terms" />
+                <img src="images/thumb1.gif" alt="" title="" class="thumb" border="0" />
+                <p class="cart_bookname">When We Believed in Mermaids: A Novel by Barbara O'Neal</p>
+              </div>
+
+              <div class="cart_qty">
+                1
+              </div>
+              <div class="cart_price">
+                8.87
+              </div>
+              <div class="cart_delete"> <a name="delbook" href="javascript:;" id="21">Delete</a> </div>
+            </div>  -->
+
+ 
+          </div>
+          <div id="id_subtotal" class="cart_subtotal">
+            Subtotal (0 items): NZD 0.0
+          </div>
+          <div class="cart_sub_btn">
+            <input id="id_submit" type="submit" class="register" value="Process to checkout" />
+          </div>
+        </div>
+      </div>
+      
+      <div class="tip_box" id="submitInfo" hidden>
+        <br />
+        <h3>Your order submit successful!</h3>
+        <br />
+        <h3>After <strong id="time">5</strong> Secs, jump into Order Page! </h3>
+      </div>
+      
+    </div>
+    <div class="clear"></div>
+  </div><!-- ./wrap -->
+
+
+</body>
+
+</html>

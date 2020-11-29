@@ -1,0 +1,243 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Book Store</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+<script>
+
+  function loadBooks(obj) {
+    var category_id = obj.getAttribute("id");
+    var parent = obj.parentNode;
+    var grandparent = parent.parentNode;
+    var cla = grandparent.getAttribute("class");
+    console.log("dd:", cla);
+    var children = grandparent.children;
+    console.log("length: ", children.length);
+    for (var i = 0; i < children.length; i++) {
+      var val = children[i];
+      val.removeAttribute("class");
+    }
+    var li_class = document.createAttribute("class");
+    li_class.value = "selected";
+    parent.setAttributeNode(li_class);
+    
+    $.ajax({
+    	type: 'post',
+        url: 'ShowBooksServlet',
+        data: {categoryid: category_id},
+        cache: false,
+        dataType: 'json',
+        success: function (data, status) {
+          var obj = data;
+          if (obj.status == "0") {
+            console.log("books: " + obj.length);
+            console.log(obj.records);
+            //location.href = "index.html";
+            ShowBooks(obj.records);  
+          } else {
+ 
+          }
+        },
+        error: function (e) {
+        	console.log("Connect fail!");
+        }
+    });
+  }
+  
+  function ShowBooks(objs) {
+	  var total = 0;
+      var htmlText = "";
+      for (var i = 0; i < objs.length; i++) {
+    	  htmlText += '<div class="new_prod_box">';
+    	  
+    	  htmlText += '<a href="details.html?bookid=' + objs[i].bookid +'">'+ objs[i].title + '</a>';
+    	  
+    	  htmlText += '<div class="new_prod_bg">';
+    	  
+    	  if (objs[i].saletype === '1') {
+    		  htmlText += '<span class="new_icon"><img src="images/new_icon.gif" alt="" title="" /></span>'; 
+    	  } else if (objs[i].saletype === '-1') {
+    		  htmlText += '<span class="new_icon"><img src="images/promo_icon.gif" alt="" title="" /></span>';
+    	  }
+
+    	  htmlText += '<a href="details.html?bookid=' + objs[i].bookid + '">';
+    	  
+    	  htmlText += '<img src="images/thumb'+ objs[i].bookid +'.gif" alt="" title="" class="thumb" border="0" /></a>';
+    	  
+    	  htmlText += '</div></div>';
+      }
+      
+      $(".new_products").html(htmlText);
+  }
+
+	$(document).ready(function () { 
+		var useraccount = $.cookie('USERACCOUNT');
+		var userid = $.cookie('USERID');
+		if (useraccount != null) {
+			
+		  $("#id_useraccount").text(useraccount);
+		  $("#id_logout").hover(function () {
+		    $("#id_logout").css("color", "#f7a849");
+		  }, function () {
+		    $("#id_logout").css("color", "white");
+		  });
+		  $(".user_login_register_box").hide();
+		  
+		} else {
+			
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		}
+		
+		$("#id_logout").click(function(){
+		  // $.cookie('USERACCOUNT', null);
+		  $.removeCookie('USERACCOUNT');
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		});
+		
+		$.ajax({
+	    	type: 'post',
+	        url: 'ShowBooksServlet',
+	        data: {categoryid: "1"},
+	        cache: false,
+	        dataType: 'json',
+	        success: function (data, status) {
+	          var obj = data;
+	          if (obj.status == "0") {
+	            console.log("books: " + obj.length);
+	            console.log(obj.records);
+	            //location.href = "index.html";
+	            ShowBooks(obj.records);  
+	          } else {
+	 
+	          }
+	        },
+	        error: function (e) {
+	        	console.log("Connect fail!");
+	        }
+	    });
+	
+	});
+
+</script>
+
+<body>
+  <div id="wrap">
+    <div class="header">
+      <div class="logo">
+        <a href="index.html"><img src="images/logo.gif" alt="" title="" border="0" /></a>
+      </div>
+      <div id="menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li class="selected"><a href="#">Books</a></li>
+          <li><a href="cart.html">Shopping Cart</a></li>
+          <li><a href="order.html">My Order</a></li>
+          <li><a href="search.html">Search</a></li>
+        </ul>
+      </div>
+
+      <div class="user_status_box">
+        <a id="id_useraccount"></a><a>&nbsp;&nbsp;-&nbsp;&nbsp;</a>
+        <a id="id_logout" href="#">Logout</a>
+      </div>
+      
+      <div class="user_login_register_box">
+        <a id="id_user_login" href="login.html">Login</a><a>&nbsp;/</a>
+        <a id="id_user_register" href="register.html">Register</a>
+      </div>
+
+    </div>
+
+    <div class="center_content">
+      <div class="center_layout">
+        <div class="title"><span class="title_icon"><img src="images/bullet1.gif" alt="" title="" /></span>Category
+          books</div>
+
+        <div id="book_categories">
+          <ul class="list">
+            <li class="selected"><a href="#" onclick="loadBooks(this);return false;" id="1">Arts & Photography</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="2">Biographies</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="3">Business</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="4">Children’s Book</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="5">Cookbooks</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="6">History</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="7">Literature</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="8">Mystery</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="9">Romance</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="10">Sci - Fi</a></li>
+            <li><a href="#" onclick="loadBooks(this);return false;" id="11">Teens</a></li>
+          </ul>
+        </div>
+
+        <div id="book_items">
+          <div class="new_products">
+            <div class="new_prod_box"> <a href="details.htm">art 1</a>
+              <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb1.gif" alt="" title="" class="thumb"
+                    border="0" /></a> 
+              </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 2</a>
+              <div class="new_prod_bg"> <span class="new_icon"><img src="images/new_icon.gif" alt="" title="" /></span>
+                <a href="details.htm"><img src="images/thumb2.gif" alt="" title="" class="thumb" border="0" /></a>
+              </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 3</a>
+              <div class="new_prod_bg"> <span class="new_icon"><img src="images/promo_icon.gif" alt=""
+                    title="" /></span> <a href="details.htm"><img src="images/thumb3.gif" alt="" title="" class="thumb"
+                    border="0" /></a> </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 4</a>
+              <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb1.gif" alt="" title="" class="thumb"
+                    border="0" /></a> </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 5</a>
+              <div class="new_prod_bg"> <span class="new_icon"><img src="images/promo_icon.gif" alt=""
+                    title="" /></span> <a href="details.htm"><img src="images/thumb2.gif" alt="" title="" class="thumb"
+                    border="0" /></a> </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 6dfsdfsdfsdfsfsdfsdfsdfsdfsd4444444444445</a>
+              <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb3.gif" alt="" title="" class="thumb"
+                    border="0" /></a> </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 7</a>
+              <div class="new_prod_bg"> <span class="new_icon"><img src="images/new_icon.gif" alt="" title="" /></span>
+                <a href="details.htm"><img src="images/thumb2.gif" alt="" title="" class="thumb" border="0" /></a>
+              </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 8</a>
+              <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb1.gif" alt="" title="" class="thumb"
+                    border="0" /></a> </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 9</a>
+              <div class="new_prod_bg"> <a href="details.htm"><img src="images/thumb1.gif" alt="" title="" class="thumb"
+                    border="0" /></a> </div>
+            </div>
+            <div class="new_prod_box"> <a href="details.htm">art 10</a>
+              <div class="new_prod_bg"> <span class="new_icon"><img src="images/new_icon.gif" alt="" title="" /></span>
+                <a href="details.htm"><img src="images/thumb1.gif" alt="" title="" class="thumb" border="0" /></a>
+              </div>
+            </div>
+          </div> 
+        </div>
+        
+        
+      </div>
+
+    </div>
+    <div class="clear"></div>
+  </div><!-- ./wrap -->
+
+
+</body>
+
+</html>

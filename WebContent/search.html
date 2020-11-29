@@ -1,0 +1,199 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Book Store</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script>
+  $(document).ready(function () {
+	  
+	  	$("#id_user_login").css("color", "#f7a849");
+	  	var useraccount = $.cookie('USERACCOUNT');
+		if (useraccount != null) {
+		  $("#id_useraccount").text(useraccount);
+		
+		  $("#id_logout").hover(function () {
+		    $("#id_logout").css("color", "#f7a849");
+		  }, function () {
+		    $("#id_logout").css("color", "white");
+		  });
+		  
+		  $(".user_login_register_box").hide();
+		} else {
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		}
+		
+		$("#id_logout").click(function(){
+		  // $.cookie('USERACCOUNT', null);
+		  $.removeCookie('USERACCOUNT');
+		  $(".user_status_box").hide();
+		  $(".user_login_register_box").show();
+		});
+		
+
+    $(":button").click(function () {
+      $.ajax({
+        type: 'post',
+        url: 'SearchBookServlet',
+        data: $("#searchform").serialize(),
+        cache: false,
+        dataType: 'json',
+        success: function (data, status) {
+          var obj = data;
+          if (obj.status == "0") {
+            console.log("books: " + obj.length);
+            console.log(obj.records);
+            //location.href = "index.html";
+            ShowSearchingResult(obj.records);
+            
+            $(".searching_tip_box").html('<h2><strong>'+ obj.length +' results for</strong> <a>"'+ $("#id_keywords").val() +'"</a></h2>');
+            $(".searching_tip_box").show();
+            $("#cart_box_details").show();
+            
+          } else {
+            $(".searching_tip_box").html('<h2><strong>'+ 0 +' results for</strong> <a>"'+ $("#id_keywords").val() +'"</a></h2>');
+            $(".searching_tip_box").show();
+            $("#cart_box_details").hide();
+          }
+
+        },
+        error: function (e) {
+          alert("Connect fail!");
+        }
+      });
+    });
+    
+    function ShowSearchingResult(objs) {
+        var total = 0;
+        var htmlText = "";
+        for (var i = 0; i < objs.length; i++) {
+          total += objs[i].fee;
+          htmlText += '<div class="cart_row"><div class="cart_selectbox">';
+          
+          htmlText += '<a href="details.html?bookid='+ objs[i].bookid +'"><img src="images/thumb' + objs[i].bookid + '.gif" alt="" title="" class="thumb" border="0" /></a>';
+
+          htmlText += '<p class="cart_bookname"><strong>'+ objs[i].title +'</strong><br/> by <a>'+ objs[i].authors +'</a></p></div>';
+          
+          htmlText += '<div class="cart_qty">' + objs[i].saledate + '</div>';
+          
+          htmlText += '<div class="cart_price"> NZD ' + objs[i].price + '</div>';
+            
+          htmlText += '</div>';
+          
+        }
+        $(".cart_form").html(htmlText);
+    }
+    
+    
+ //   $('#searchform input').on('change', function() {
+ //   	   alert($('input[name=SearchType]:checked', '#searchform').val()); 
+ //   });
+
+  });
+</script>
+
+<body>
+  <div id="wrap">
+    <div class="header">
+      <div class="logo">
+        <a href="index.html"><img src="images/logo.gif" alt="" title="" border="0" /></a>
+      </div>
+      <div id="menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="books.html">Books</a></li>
+          <li><a href="cart.html">Shopping Cart</a></li>
+          <li><a href="order.html">My Order</a></li>
+          <li class="selected"><a href="search.html" >Search</a></li>
+        </ul>
+      </div>
+      
+      <div class="user_status_box">
+        <a id="id_useraccount"></a><a>&nbsp;&nbsp;-&nbsp;&nbsp;</a>
+        <a id="id_logout" href="#">Logout</a>
+      </div>
+      
+      <div class="user_login_register_box">
+        <a id="id_user_login" href="login.html">Login</a><a>&nbsp;/</a>
+        <a id="id_user_register" href="register.html">Register</a>
+      </div>
+      
+    </div>
+
+    <div class="center_content">
+      <div class="center_layout">
+        <div class="title"><span class="title_icon"><img src="images/bullet1.gif" alt="" title="" /></span>Search
+        </div>
+        <div class="feat_prod_box_details">
+          <div class="contact_form">
+            <div class="form_subtitle">Input keywords for your searching</div>
+            <form id="searchform" action="#">
+
+			  <div class="form_row">
+			  	<div class="terms">
+			  		<strong>Searching Keywords</strong>
+			  	</div>
+			  </div>
+              <div class="form_row">
+              	<div class="terms">
+                	<input id="id_keywords" type="text" class="contact_input" name="keywords" />
+                </div>
+              </div>
+              <div class="form_row">
+              	<div class="terms">
+					<input type="radio" name="searchType" value="1" checked="true"/> Title 
+					<input type="radio" name="searchType" value="2" /> Author
+  			     </div>
+              </div>
+              <div class="form_row">
+                <input type="button" class="register" value="Search" />
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <div class="searching_tip_box" hidden>
+	        <!--<h2><strong>200 results for</strong> <a>"from the shadows"</a></h2>-->
+      	</div>
+      	
+      	<div id="cart_box_details" hidden>
+
+			<!--<div class="cart_qty">
+			  Date
+			</div>
+			<div class="cart_price">
+			  Price
+			</div>-->
+          
+	        <div class="cart_form">
+	            <!--<div class="cart_row">
+	              <div class="cart_selectbox">
+	                <img src="images/thumb1.gif" alt="" title="" class="thumb" border="0" />
+	                <p class="cart_bookname">
+	                	<strong>When We Believed in Mermaids: A Novel</strong><br/> by <a>Barbara</a>
+	                </p>
+	              </div>
+	              <div class="cart_qty">
+	                Sep 1, 2020
+	              </div>
+	              <div class="cart_price">
+	                8.87
+	              </div>
+	            </div>-->
+	        </div>
+          
+      	</div>
+      </div>
+      <div class="clear"></div>
+    </div>
+  </div>
+</body>
+
+</html>

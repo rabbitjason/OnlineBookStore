@@ -1,0 +1,220 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Book Store</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+<script type="text/javascript">
+
+	$(document).ready(function() {
+		
+		var useraccount = $.cookie('USERACCOUNT');
+
+	    if (useraccount != null) {
+	      $("#id_useraccount").text(useraccount);
+
+	      $("#id_logout").hover(function () {
+	        $("#id_logout").css("color", "#f7a849");
+	      }, function () {
+	        $("#id_logout").css("color", "white");
+	      });
+	      
+	      $(".user_login_register_box").hide();
+	    } else {
+	      $(".user_status_box").hide();
+	      $(".user_login_register_box").show();
+	    }
+
+	    $("#id_logout").click(function(){
+	      // $.cookie('USERACCOUNT', null);
+	      $.removeCookie('USERACCOUNT');
+	      $(".user_status_box").hide();
+	      $(".user_login_register_box").show();
+	    });
+	    
+	    var user_id = $.cookie('USERID');
+	    if (useraccount != null) {
+	    	$.ajax({
+	  	      type: 'post',
+	  	      url: 'ShowOrderServlet',
+	  	      data: { userid: user_id },
+	  	      cache: false,
+	  	      dataType: 'json',
+	  	      success: function (data, status) {
+	  	        var obj = data;
+	  	        if (obj.status == "0") {
+	  	          //alert("Show cart Successful!" + obj.records.length);
+	  	          //ShowCart(obj.records);
+					console.log("orders :" + obj.records.length);
+					console.log(obj.records);
+					ShowOrder(obj.records);
+	  	        } else {
+	  	        	console.log("Get data fail!" + obj.userid);
+	  	        	$("#order_box_details").hide();
+	  	        }
+	  	
+	  	      },
+	  	      error: function (e) {
+	  	        alert("Connect fail!");
+	  	      }
+	  	    });
+	    } else {
+	    	$("#order_box_details").hide();
+	    }
+	});
+	
+	function ShowOrder(objs) {
+		var total = 0;
+	    for (var i = 0; i < objs.length; i++) {
+	    	var books = objs[i].books;
+	    	var htmlText = '<div class="order_cell">'
+	    	htmlText += '<div class="order_cell_header">';
+	    	
+	    	htmlText += '<a>'+ objs[i].ordertime +'</a><a>Order number: '+ objs[i].ordernumber +'</a></div>';
+	    	
+	    	htmlText += '<table width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td width="60%" class="td_rightside">'
+	    	
+	    	htmlText += '<table id="t01" width="100%" border="0" cellpadding="0" cellspacing="0">';
+	    	
+	    	for (var j = 0; j < books.length; j++) {
+	    		
+	    		if (j === 0) {
+	    			htmlText += '<tr>';
+		    		
+		    		htmlText += '<td width="15%" align="center"><img src="images/cart_thumb.gif" alt="" title="" border="0" class="cart_thumb"/></td>'
+		    		
+		    		htmlText += '<td width="65%">'+ books[j].title +'</td>';
+		    		
+		    		htmlText += '<td align="center">X '+ books[j].quantity + '</td>';
+		    				
+		    		htmlText += '</tr>';
+	    		} else {
+	    			htmlText += '<tr>';
+		    		
+		    		htmlText += '<td class="td_topside" align="center"><img src="images/cart_thumb.gif" alt="" title="" border="0" class="cart_thumb"/></td>'
+		    		
+		    		htmlText += '<td class="td_topside">'+ books[j].title +'</td>';
+		    		
+		    		htmlText += '<td class="td_topside" align="center">X '+ books[j].quantity + '</td>';
+		    				
+		    		htmlText += '</tr>';
+	    		}
+	    		
+	    		total += books[j].fee;
+	    	}
+
+	    	htmlText += '</table>';
+	    	
+	    	htmlText += '</td>';
+	    	
+	    	htmlText += '<td width="20%" align="center" class="td_rightside">'+ objs[i].firstname +'</td>';
+	    	
+	    	htmlText += '<td align="center">NZD '+ total +'</td>';
+	    	
+	    	htmlText += '</tr></table></div>';
+	    	
+	    	$("#order_box_details").append(htmlText);
+	    }
+	}
+
+</script>
+
+<body>
+  <div id="wrap">
+    <div class="header">
+      <div class="logo">
+        <a href="index.html"><img src="images/logo.gif" alt="" title="" border="0" /></a>
+      </div>
+      <div id="menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="books.html">Books</a></li>
+          <li><a href="cart.html">Shopping Cart</a></li>
+          <li class="selected"><a href="order.html">My Order</a></li>
+          <li><a href="search.html">Search</a></li>
+        </ul>
+      </div>
+      
+      <div class="user_status_box">
+        <a id="id_useraccount"></a><a>&nbsp;&nbsp;-&nbsp;&nbsp;</a>
+        <a id="id_logout" href="#">Logout</a>
+      </div>
+      
+      <div class="user_login_register_box">
+        <a id="id_user_login" href="login.html">Login</a><a>&nbsp;/</a>
+        <a id="id_user_register" href="register.html">Register</a>
+      </div>
+      
+    </div>
+
+    <div class="center_content">
+      <div class="center_layout">
+        <div class="title"><span class="title_icon"><img src="images/bullet1.gif" alt="" title="" /></span>My Order
+        </div>
+        <div id="order_box_details">
+          <div class="order_title">
+            <a class="name_details">Order details</a>
+            <a class="name_receiver">Receiver</a>
+            <a class="name_price">Price</a>
+          </div>
+
+          <!--<div class="order_cell">
+            <div class="order_cell_header">
+              <a>2020-04-20 20:54:14</a>
+              <a>Order number: 1113</a>
+            </div>
+
+            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="60%" class="td_rightside">
+                  <table id="t01" width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td width="15%" align="center"><img src="images/cart_thumb.gif" alt="" title="" border="0"
+                          class="cart_thumb" /> </td>
+                      <td width="65%">When We Believed in Mermaids: A Novel by Barbara O'Neal</td>
+                      <td align="center">X 1</td>
+                    </tr>
+                    <tr>
+                      <td class="td_topside" width="15%" align="center"><img src="images/cart_thumb.gif" alt="" title=""
+                          border="0" class="cart_thumb" /> </td>
+                      <td class="td_topside" width="65%">Sold on a Monday: A Novel by Kristina McMorris</td>
+                      <td class="td_topside" align="center">X 1</td>
+                    </tr>
+                    <tr>
+                      <td class="td_topside" align="center"><img src="images/cart_thumb.gif" alt="" title="" border="0"
+                          class="cart_thumb" /> </td>
+                      <td class="td_topside">Sold on a Monday: A Novel by Kristina McMorris</td>
+                      <td class="td_topside" align="center">X 1</td>
+                    </tr>
+                    <tr>
+                      <td class="td_topside" align="center"><img src="images/cart_thumb.gif" alt="" title="" border="0"
+                          class="cart_thumb" /> </td>
+                      <td class="td_topside">When We Believed in Mermaids: A Novel by Barbara O'Neal</td>
+                      <td class="td_topside" align="center">X 1</td>
+                    </tr>
+                  </table>
+                </td>
+                <td width="20%" align="center" class="td_rightside">Tony</td>
+                <td align="center">NZD 14.16 </td>
+              </tr>
+            </table>
+          </div> -->
+
+        </div>
+      </div>
+
+    </div>
+    <div class="clear"></div>
+  </div><!-- ./wrap -->
+
+
+</body>
+
+</html>
